@@ -648,7 +648,7 @@ class Cosine(Stationary):
 
        k(r) = \sigma^2 \cos \\bigg( r \\bigg)
        
-       r(x, x') = \\sqrt{ \\sum_{q=1}^Q (x_q - x'_q)^2 }
+       r(x, x') = \\sqrt{ \\sum_{q=1}^Q \\frac{(x_q - x'_q)^2}{\ell_q^2} }
 
     """
     def __init__(self, input_dim, variance=1., lengthscale=None, ARD=False, active_dims=None, name='Cosine'):
@@ -695,7 +695,7 @@ class Sinus(Stationary):
 
        k(r) = \sigma^2 \sin \\bigg( r \\bigg)
        
-       r(x, x') = \\sqrt{ \\sum_{q=1}^Q (x_q - x'_q)^2 }
+       r(x, x') = \\sqrt{ \\sum_{q=1}^Q \\frac{(x_q - x'_q)^2}{\ell_q^2} }
 
     """
     
