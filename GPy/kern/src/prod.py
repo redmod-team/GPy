@@ -74,16 +74,16 @@ class Prod(CombinationKernel):
         # Product rule to kprod = k0*k1
         # d(kprod/dx0) = dk0/dx0*k1
         # d(kprod/dx1) = k0*dk1/dx1
-        other = self.parts[:] 
-        All = other[:]
-        n = len(All)
-        nX = X.shape[0]
-        nX2 = X2.shape[0]
-        diffpart = other.pop(dimX)
-        K_all = np.empty((n,nX,nX2))
-        K_all[:,:,:] = [p.K(X,X2) for p in All]
-        K_all[dimX,:,:] = diffpart.dK_dX(X,X2,dimX)
-        return np.prod(K_all,0)
+        other = self.parts[:]           # store all parts 
+        All = other[:]                  # make a copy of other
+        n = len(All)                    # get the number of the parts
+        nX = X.shape[0]                 # the number of lines of X
+        nX2 = X2.shape[0]               # the number of lines of X2
+        diffpart = other.pop(dimX)      # get the part to derivate
+        K_all = np.empty((n,nX,nX2))    # initiate the matrix of storage
+        K_all[:,:,:] = [p.K(X,X2) for p in All]     # store the K matrice of each part
+        K_all[dimX,:,:] = diffpart.dK_dX(X,X2,dimX) # store the dK_dX of the part to derivate
+        return np.prod(K_all,0)         # multiply all the elements of K_all according to the first dimension
         
     def dK_dX2(self,X,X2,dimX2):
         return -self.dK_dX(X,X2,dimX2)
@@ -94,17 +94,17 @@ class Prod(CombinationKernel):
         # d²(kprod/dx1²) = k0*d²k1/dx1²
         # d²(kprod/dx0dx1) = dk0/dx0*dk1/dx1
         # d²(kprod/dx1dx0) = dk0/dx0*dk1/dx1
-        other = self.parts[:] 
-        All = other[:]
-        n = len(All)
+        other = self.parts[:]          # store all parts
+        All = other[:]                 # make a copy of other
+        n = len(All)                   # get the number of the parts
         nX = X.shape[0]
         nX2 = X2.shape[0]
         K_all = np.empty((n,nX,nX2))
         K_all[:,:,:] = [p.K(X,X2) for p in All]
-        if (dimX==dimX2):
+        if (dimX==dimX2):              # if equality, take the second derivative of the part
             diffpart = other.pop(dimX)
             K_all[dimX,:,:] = diffpart.dK2_dXdX2(X,X2,dimX,dimX)
-        else:
+        else:                          # if not, take the first derivative of each one of the two parts
             diffpart1 = other.pop(dimX)
             diffpart2 = All[dimX2]
             K_all[dimX,:,:] = diffpart1.dK_dX(X,X2,dimX)
