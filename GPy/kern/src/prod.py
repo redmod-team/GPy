@@ -80,12 +80,9 @@ class Prod(CombinationKernel):
         nX = X.shape[0]
         nX2 = X2.shape[0]
         diffpart = other.pop(dimX)
-        K_all = np.zeros((n,nX,nX2))
-        for k in range(n):
-            if (k!=dimX):
-                K_all[k,:,:] = All[k].K(X,X2)
-            else:
-                K_all[k,:,:] = diffpart.dK_dX(X,X2,dimX)
+        K_all = np.empty((n,nX,nX2))
+        K_all[:,:,:] = [p.K(X,X2) for p in All]
+        K_all[dimX,:,:] = diffpart.dK_dX(X,X2,dimX)
         return np.prod(K_all,0)
         
     def dK_dX2(self,X,X2,dimX2):
@@ -102,26 +99,17 @@ class Prod(CombinationKernel):
         n = len(All)
         nX = X.shape[0]
         nX2 = X2.shape[0]
+        K_all = np.empty((n,nX,nX2))
+        K_all[:,:,:] = [p.K(X,X2) for p in All]
         if (dimX==dimX2):
             diffpart = other.pop(dimX)
-            K_all = np.zeros((n,nX,nX2))
-            for k in range(n):
-                if (k!=dimX):
-                    K_all[k,:,:] = All[k].K(X,X2)
-                else:
-                    K_all[k,:,:] = diffpart.dK2_dXdX2(X,X2,dimX,dimX)
+            K_all[dimX,:,:] = diffpart.dK2_dXdX2(X,X2,dimX,dimX)
         else:
             diffpart1 = other.pop(dimX)
             diffpart2 = All[dimX2]
-            K_all = np.zeros((n,nX,nX2))
-            for k in range(n):
-                if (k==dimX):
-                    K_all[k,:,:] = diffpart1.dK_dX(X,X2,dimX)
-                elif (k==dimX2):
-                    K_all[k,:,:] = diffpart2.dK_dX(X,X2,dimX2)
-                else:
-                    K_all[k,:,:] = All[k].K(X,X2)
-        return ((dimX==dimX2)+(dimX!=dimX2)*(-1.))*np.prod(K_all,0)
+            K_all[dimX,:,:] = diffpart1.dK_dX(X,X2,dimX)
+            K_all[dimX2,:,:] = diffpart2.dK_dX2(X,X2,dimX2)
+        return np.prod(K_all,0)
 
     def update_gradients_full(self, dL_dK, X, X2=None):
         if len(self.parts)==2:
