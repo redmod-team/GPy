@@ -705,48 +705,47 @@ class Cosine_prod(Stationary):
     def __init__(self, input_dim, variance=1., lengthscale=None, ARD=False, active_dims=None, name='Cosine_prod'):
         super(Cosine_prod, self).__init__(input_dim, variance, lengthscale, ARD, active_dims, name)
 
-    def K_of_r(self, dist):
-        n = dist.shape[2]
-        p = 1
-        # l = self.lengthscale
-        for k in range(n):
-            p*= np.cos(dist[:,:,k])#/l)
-        return self.variance * p
+    def K_of_r(self, dist):             # uses dist (distance) instead of r (radial distance)
+        n = dist.shape[2]               # n = dimension of the kernel
+        # # long version:
+        # p = 1                           # initialization of the product
+        # for k in range(n):
+        #     p*= np.cos(dist[:,:,k])     # product of the cosine of the distances
+        # return self.variance * p
+        # # short version:
+        return self.variance * np.prod([np.cos(dist[:,:,k]) for k in range(n)],0)
     
-    def K(self, X, X2):
-        dist = X[:,None,:]-X2[None,:,:]
+    def K(self, X, X2):                 # returns the Covariance matrix K(X,X2)
+        dist = X[:,None,:]-X2[None,:,:] # distance between X and X2
         return self.K_of_r(dist)
 
-    def dK_dr(self,dist,dimX):
-        n = dist.shape[2]
-        m = dist.shape[0]
-        # l = self.lengthscale
-        dK = np.zeros((m,m,n))
-        for i in range(n):
-            dK[:,:,i]= np.cos(dist[:,:,i])#/l)
-        dK[:,:,dimX] = -np.sin(dist[:,:,dimX])#/l)
-        return self.variance * np.prod(dK,2)#/l
+    def dK_dr(self,dist,dimX):          # returns the 1st derivative of the kernel wrt dist[:,:,dimX]
+        n = dist.shape[2]               # n = dimension of the kernel
+        m = dist.shape[0]               # m = len(X) = number of lines of X
+        dK = np.zeros((n,m,m))          # initialization of dK
+        dK[:,:,:]= [np.cos(dist[:,:,i]) for i in range(n)]  # definition of dK: contains the n-th Covariance matrices
+        dK[dimX,:,:] = -np.sin(dist[:,:,dimX])  # the dimX-th Covariance matrix is replaced by the 1st derivative matrix wrt dist[:,:,dimX]
+        return self.variance * np.prod(dK,0)    # the product of the (n-1) Covariance matrices and the 1st derivative matrix
     
-    def dK_dX(self, X, X2, dimX):
-        dist = X[:,None,:]-X2[None,:,:]
-        dK_dr = self.dK_dr(dist,dimX)
-        return dK_dr
+    def dK_dX(self, X, X2, dimX):       # returns the 1st derivative of the kernel wrt X[:,dimX]
+        dist = X[:,None,:]-X2[None,:,:] # distance between X and X2
+        return self.dK_dr(dist,dimX)
     
-    def dK_dX2(self,X,X2,dimX2):
+    def dK_dX2(self,X,X2,dimX2):        # returns the 1st derivative of the kernel wrt X2[:,dimX2]
         return -self.dK_dX(X,X2, dimX2)
     
-    def dK2_dXdX2(self, X, X2, dimX, dimX2):
-        dist = X[:,None,:]-X2[None,:,:]
-        K = self.K_of_r(dist)
-        n = dist.shape[2]
-        m = dist.shape[0]
-        # l = self.lengthscale
-        dK = np.zeros((m,m,n))
-        for i in range(n):
-            dK[:,:,i]= np.cos(dist[:,:,i])#/l)
-        dK[:,:,dimX] = np.sin(dist[:,:,dimX])#/l)
-        dK[:,:,dimX2] = np.sin(dist[:,:,dimX2])#/l)
-        return ((dimX==dimX2)*K - (dimX!=dimX2)*np.prod(dK,2))#/(l**2)
+    def dK2_dXdX2(self, X, X2, dimX, dimX2):    # returns the 2nd derivative of the kernel wrt X[:,dimX] and X2[:,dimX2]
+        dist = X[:,None,:]-X2[None,:,:] # distance between X and X2
+        if (dimX==dimX2):
+            return self.K_of_r(dist)    # K(X,X2)
+        else:
+            n = dist.shape[2]           # n = dimension of the kernel
+            m = dist.shape[0]           # m = len(X) = number of lines of X
+            dK = np.zeros((n,m,m))      # initialization of dK
+            dK[:,:,:]= [np.cos(dist[:,:,i]) for i in range(n)]      # definition of dK: contains the n-th Covariance matrices
+            dK[dimX,:,:] = np.sin(dist[:,:,dimX])   # the dimX-th Covariance matrix is replaced by the 1st derivative matrix wrt X[:,dimX]
+            dK[dimX2,:,:] = np.sin(dist[:,:,dimX2]) # the dimX2-th Covariance matrix is replaced by the 1st derivative matrix wrt X2[:,dimX2]
+            return -np.prod(dK,0))      # the product of the (n-2) Covariance matrices and the 2 1st derivative matries
 
 
 class Sinus(Stationary):
@@ -815,48 +814,47 @@ class Sinus_prod(Stationary):
     def __init__(self, input_dim, variance=1., lengthscale=None, ARD=False, active_dims=None, name='Sinus_prod'):
         super(Sinus_prod, self).__init__(input_dim, variance, lengthscale, ARD, active_dims, name)
 
-    def K_of_r(self, dist):
-        n = dist.shape[2]
-        p = 1
-        # l = self.lengthscale
-        for k in range(n):
-            p*= np.sin(dist[:,:,k])#/l)
-        return self.variance * p
+    def K_of_r(self, dist):             # uses dist (distance) instead of r (radial distance)
+        n = dist.shape[2]               # n = dimension of the kernel
+        # # long version:
+        # p = 1                           # initialization of the product
+        # for k in range(n):
+        #     p*= np.sin(dist[:,:,k])     # product of the sinus of the distances
+        # return self.variance * p
+        # # short version:
+        return self.variance * np.prod([np.sin(dist[:,:,k]) for k in range(n)],0)
     
-    def K(self, X, X2):
-        dist = X[:,None,:]-X2[None,:,:]
+    def K(self, X, X2):                 # returns the Covariance matrix K(X,X2)
+        dist = X[:,None,:]-X2[None,:,:] # distance between X and X2
         return self.K_of_r(dist)
 
-    def dK_dr(self,dist,dimX):
-        n = dist.shape[2]
-        m = dist.shape[0]
-        # l = self.lengthscale
-        dK = np.zeros((m,m,n))
-        for i in range(n):
-            dK[:,:,i]= np.sin(dist[:,:,i])#/l)
-        dK[:,:,dimX] = np.cos(dist[:,:,dimX])#/l)
-        return self.variance * np.prod(dK,2)#/l
+    def dK_dr(self,dist,dimX):          # returns the 1st derivative of the kernel wrt dist[:,:,dimX]
+        n = dist.shape[2]               # n = dimension of the kernel
+        m = dist.shape[0]               # m = len(X) = X.shape[0] = number of lines of X
+        dK = np.zeros((n,m,m))          # initialization of dK
+        dK[:,:,:]= [np.sin(dist[:,:,i]) for i in range(n)] # definition of dK: contains the n-th Covariance matrices
+        dK[dimX,:,:] = np.cos(dist[:,:,dimX])   # the dimX-th Covariance matrix is replaced by the 1st derivative matrix wrt dist[:,:,dimX]
+        return self.variance * np.prod(dK,0)    # the product of the (n-1) Covariance matrices and the 1st derivative matrix
     
-    def dK_dX(self, X, X2, dimX):
-        dist = X[:,None,:]-X2[None,:,:]
-        dK_dr = self.dK_dr(dist,dimX)
-        return dK_dr
+    def dK_dX(self, X, X2, dimX):       # returns the 1st derivative of the kernel wrt X[:,dimX]
+        dist = X[:,None,:]-X2[None,:,:] # distance between X and X2
+        return self.dK_dr(dist,dimX)
     
-    def dK_dX2(self,X,X2,dimX2):
+    def dK_dX2(self,X,X2,dimX2):        # returns the 1st derivative of the kernel wrt X2[:,dimX2]
         return -self.dK_dX(X,X2, dimX2)
     
-    def dK2_dXdX2(self, X, X2, dimX, dimX2):
-        dist = X[:,None,:]-X2[None,:,:]
-        K = self.K_of_r(dist)
-        n = dist.shape[2]
-        m = dist.shape[0]
-        # l = self.lengthscale
-        dK = np.zeros((m,m,n))
-        for i in range(n):
-            dK[:,:,i]= np.sin(dist[:,:,i])#/l)
-        dK[:,:,dimX] = np.cos(dist[:,:,dimX])#/l)
-        dK[:,:,dimX2] = np.cos(dist[:,:,dimX2])#/l)
-        return ((dimX==dimX2)*K - (dimX!=dimX2)*np.prod(dK,2))#/(l**2)
+    def dK2_dXdX2(self, X, X2, dimX, dimX2):    # returns the 2nd derivative of the kernel wrt X[:,dimX] and X2[:,dimX2]
+        dist = X[:,None,:]-X2[None,:,:] # distance between X and X2
+        if (dimX==dimX2):
+            return self.K_of_r(dist)    # K(X,X2)
+        else:
+            n = dist.shape[2]           # n = dimension of the kernel
+            m = dist.shape[0]           # m = len(X) = X.shape[0] = number of lines of X
+            dK = np.zeros((m,m,n))      # initialization of dK
+            dK[:,:,:]= [np.sin(dist[:,:,i]) for i in range(n)] # definition of dK: contains the n-th Covariance matrices
+            dK[dimX,:,:] = np.cos(dist[:,:,dimX])   # the dimX-th Covariance matrix is replaced by the 1st derivative matrix wrt X[:,dimX]
+            dK[dimX2,:,:] = np.cos(dist[:,:,dimX2]) # the dimX-th Covariance matrix is replaced by the 1st derivative matrix wrt X2[:,dimX2]
+            return -np.prod(dK,0))      # the product of the (n-2) Covariance matrices and the 2 1st derivative matrices
     
 
 
