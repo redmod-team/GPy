@@ -646,7 +646,7 @@ class Cosine(Stationary):
 
     .. math::
 
-       k(r) = \sigma^2 \cos \\bigg( r \\bigg)
+       k(r) = \sigma^2 \cos ( r )
        
        r(x, x') = \\sqrt{ \\sum_{q=1}^Q \\frac{(x_q - x'_q)^2}{\ell_q^2} }
 
@@ -754,7 +754,7 @@ class Sinus(Stationary):
 
     .. math::
 
-       k(r) = \sigma^2 \sin \\bigg( r \\bigg)
+       k(r) = \sigma^2 \sin ( r )
        
        r(x, x') = \\sqrt{ \\sum_{q=1}^Q \\frac{(x_q - x'_q)^2}{\ell_q^2} }
 
