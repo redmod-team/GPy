@@ -665,7 +665,7 @@ class Cosine(Stationary):
         dK_dr = self.dK_dr(r)
         dist = X[:,None,dimX]-X2[None,:,dimX]
         lengthscale2inv = (np.ones((X.shape[1]))/(self.lengthscale**2))[dimX]
-        return 2. * lengthscale2inv * dist * r**(-1) * dK_dr
+        return lengthscale2inv * dist * r**(-1) * dK_dr
     
     def dK_dX2(self,X,X2,dimX2):7
         return -1.*self.dK_dX(X,X2, dimX2)
@@ -676,15 +676,11 @@ class Cosine(Stationary):
         r = self._scaled_dist(X, X2)
         dist = X[:,None,:]-X2[None,:,:]
         lengthscale2inv = np.ones((X.shape[1]))/(self.lengthscale**2)
-        K = self.K_of_r(r)
-        dK_dr = self.dK_dr(r)
-        dist = X[:,None,:]-X2[None,:,:]
-        lengthscale2inv = np.ones((X.shape[1]))/(self.lengthscale**2)
         l1 = lengthscale2inv[dimX]
         l2 = lengthscale2inv[dimX2]
         d1 = dist[:,:,dimX]
-        d2 = dist[:,:,dimX]
-        return (dimX==dimX2)*(-2.)*l1*d1*r**(-1)*dK_dr + l1*d1*r**(-1) * (2.*l1*d1*r**(-1)*dK_dr + 4*l2*d2*K)
+        d2 = dist[:,:,dimX2]
+        return (dimX!=dimX2)*self.variance*d1*d2*l1*l2*(r*np.cos(r)-np.sin(r))*r**(-3) + (dimX==dimX2)*self.variance*l2*(r**2*np.sin(r)+r*d1**2*l2*np.cos(r)-d1**2*l2*np.sin(r))*r**(-3)
 
 
 
@@ -774,7 +770,7 @@ class Sinus(Stationary):
         dK_dr = self.dK_dr(r)
         dist = X[:,None,dimX]-X2[None,:,dimX]
         lengthscale2inv = (np.ones((X.shape[1]))/(self.lengthscale**2))[dimX]
-        return 2.*lengthscale2inv*dist*r**(-1)*dK_dr
+        return lengthscale2inv*dist*r**(-1)*dK_dr
     
     def dK_dX2(self,X,X2,dimX2):
         return -1.*self.dK_dX(X,X2, dimX2)
@@ -785,16 +781,12 @@ class Sinus(Stationary):
         r = self._scaled_dist(X, X2)
         dist = X[:,None,:]-X2[None,:,:]
         lengthscale2inv = np.ones((X.shape[1]))/(self.lengthscale**2)
-        K = self.K_of_r(r)
-        dK_dr = self.dK_dr(r)
-        dist = X[:,None,:]-X2[None,:,:]
-        lengthscale2inv = np.ones((X.shape[1]))/(self.lengthscale**2)
         l1 = lengthscale2inv[dimX]
         l2 = lengthscale2inv[dimX2]
         d1 = dist[:,:,dimX]
-        d2 = dist[:,:,dimX]
-        return (dimX==dimX2)*(-2.)*l1*d1*r**(-1)*dK_dr + l1*d1*r**(-1) * (2.*l1*d1*r**(-1)*dK_dr + 4*l2*d2*K)
-
+        d2 = dist[:,:,dimX2]
+        return (dimX!=dimX2)*self.variance*d1*l1*d2*l2*(r*np.sin(r)+np.cos(r))*r**(-3) + (dimX==dimX2)*self.variance*l1*(-r**2*np.cos(r)+r*d1**2*l1*np.sin(r)+d1**2*l1*np.cos(r))*r**(-3)
+  
 
     
 class Sinus_prod(Stationary):
