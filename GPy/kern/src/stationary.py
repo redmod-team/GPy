@@ -657,29 +657,29 @@ class Cosine(Stationary):
     def K_of_r(self, r):
         return self.variance * np.cos(r)
 
-    def dK_dr(self, r):
+    def dK_dr(self, r):                     # returns the 1st derivative of the kernel wrt r
         return -self.variance * np.sin(r)
     
-    def dK_dX(self, X, X2, dimX):
-        r = self._scaled_dist(X, X2)
-        dK_dr = self.dK_dr(r)
-        dist = X[:,None,dimX]-X2[None,:,dimX]
-        lengthscale2inv = (np.ones((X.shape[1]))/(self.lengthscale**2))[dimX]
+    def dK_dX(self, X, X2, dimX):           # returns the 1st derivative wrt X
+        r = self._scaled_dist(X, X2)        # radial distance between X and X2
+        dK_dr = self.dK_dr(r)               # 1st derivative wrt r
+        dist = X[:,None,dimX]-X2[None,:,dimX]                                   # distance between X and X2
+        lengthscale2inv = (np.ones((X.shape[1]))/(self.lengthscale**2))[dimX]   # 1/(lengthscale**2)
         return lengthscale2inv * dist * r**(-1) * dK_dr
     
-    def dK_dX2(self,X,X2,dimX2):7
+    def dK_dX2(self,X,X2,dimX2):            # returns the 1st derivative wrt X2
         return -1.*self.dK_dX(X,X2, dimX2)
     
-    def dK2_dXdX2(self, X, X2, dimX, dimX2):
+    def dK2_dXdX2(self, X, X2, dimX, dimX2):# returns the 2nd derivative wrt X and X2
         if X2 is None:
             X2 = X
         r = self._scaled_dist(X, X2)
         dist = X[:,None,:]-X2[None,:,:]
         lengthscale2inv = np.ones((X.shape[1]))/(self.lengthscale**2)
-        l1 = lengthscale2inv[dimX]
-        l2 = lengthscale2inv[dimX2]
-        d1 = dist[:,:,dimX]
-        d2 = dist[:,:,dimX2]
+        l1 = lengthscale2inv[dimX]          # 1/(l_dimX)**2
+        l2 = lengthscale2inv[dimX2]         # 1/(l_dimX2)**2
+        d1 = dist[:,:,dimX]                 # (X_dimX - X2_dimX)
+        d2 = dist[:,:,dimX2]                # (X_dimX2 - X2_dimX2)
         return (dimX!=dimX2)*self.variance*d1*d2*l1*l2*(r*np.cos(r)-np.sin(r))*r**(-3) + (dimX==dimX2)*self.variance*l2*(r**2*np.sin(r)+r*d1**2*l2*np.cos(r)-d1**2*l2*np.sin(r))*r**(-3)
 
 
@@ -762,30 +762,31 @@ class Sinus(Stationary):
     def K_of_r(self, r):
         return self.variance * np.sin(r)
 
-    def dK_dr(self, r):
+    def dK_dr(self, r):                     # returns the 1srt derivative of the kernel wrt r
         return self.variance * np.cos(r)
     
-    def dK_dX(self, X, X2, dimX):
-        r = self._scaled_dist(X, X2)
-        dK_dr = self.dK_dr(r)
-        dist = X[:,None,dimX]-X2[None,:,dimX]
-        lengthscale2inv = (np.ones((X.shape[1]))/(self.lengthscale**2))[dimX]
+    def dK_dX(self, X, X2, dimX):           # returns 1st derivative wrt X
+        r = self._scaled_dist(X, X2)        # radial distance between X and X2
+        dK_dr = self.dK_dr(r)               # 1st derivative wrt r
+        dist = X[:,None,dimX]-X2[None,:,dimX]                                   # distance between X and X2
+        lengthscale2inv = (np.ones((X.shape[1]))/(self.lengthscale**2))[dimX]   # 1/lengthscale**2
         return lengthscale2inv*dist*r**(-1)*dK_dr
     
-    def dK_dX2(self,X,X2,dimX2):
+    def dK_dX2(self,X,X2,dimX2):            # returns 1st derivative wrt X2
         return -1.*self.dK_dX(X,X2, dimX2)
     
-    def dK2_dXdX2(self, X, X2, dimX, dimX2):
+    def dK2_dXdX2(self, X, X2, dimX, dimX2):# returns 2nd derivative wrt X and X2
         if X2 is None:
             X2 = X
         r = self._scaled_dist(X, X2)
         dist = X[:,None,:]-X2[None,:,:]
         lengthscale2inv = np.ones((X.shape[1]))/(self.lengthscale**2)
-        l1 = lengthscale2inv[dimX]
-        l2 = lengthscale2inv[dimX2]
-        d1 = dist[:,:,dimX]
-        d2 = dist[:,:,dimX2]
+        l1 = lengthscale2inv[dimX]          # 1/(l_dimX)**2
+        l2 = lengthscale2inv[dimX2]         # 1/(l_dimX2)**2
+        d1 = dist[:,:,dimX]                 # (X_dimX - X2_dimX)
+        d2 = dist[:,:,dimX2]                # (X_dimX2 - X2_dimX2)
         return (dimX!=dimX2)*self.variance*d1*l1*d2*l2*(r*np.sin(r)+np.cos(r))*r**(-3) + (dimX==dimX2)*self.variance*l1*(-r**2*np.cos(r)+r*d1**2*l1*np.sin(r)+d1**2*l1*np.cos(r))*r**(-3)
+
   
 
     
